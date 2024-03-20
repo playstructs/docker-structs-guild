@@ -11,11 +11,11 @@ services:
       - 1317:1317
     environment:
       MONIKER: 'UnknownGuild'
-      NETWORK_VERSION: '74b'
-      NETWORK_TYPE: 'testnet'
-      NETWORK_CHAIN_ID: 'structstestnet-74'
+      NETWORK_VERSION: '00'
+      NETWORK_TYPE: 'localtestnet'
+      NETWORK_CHAIN_ID: 'structstestnet-00'
       NODE_TYPE: 'NONVALIDATING'
-      NODE_INDEXER: 'PSQL'
+      NODE_INDEXER: 'psql'
       NODE_INDEXER_PG_CONNECTION: 'postgres://structs_indexer@structs-pg:5432/structs'
   structs-pg:
     image: 'structs/structs-pg:latest'
