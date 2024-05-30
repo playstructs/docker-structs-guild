@@ -20,6 +20,8 @@ services:
   structs-pg:
     image: 'structs/structs-pg:latest'
     hostname: 'structs-pg'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
     ports:
       - 5432:5432
     restart: on-failure
