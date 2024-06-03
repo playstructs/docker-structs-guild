@@ -12,7 +12,7 @@ In the distant future the species of the galaxy are embroiled in a race for Alph
 
 The following will run the entire Structs guild stack including structsd, structs-pg, structs-proxy, and soon structs-webapp! 
 
-*Note* The structsd instance is non-validating. Validator must currently be run seperately. 
+*Note* The structsd instance is non-validating. Validator must currently be run separately. 
 
 ```
 git clone git@github.com:playstructs/docker-structs-guild.git
@@ -20,13 +20,6 @@ cd docker-structs-guild
 docker compose -f compose.yaml up 
 ```
 
-Running from an Apple machine? 
-
-```
-git clone git@github.com:playstructs/docker-structs-guild.git
-cd docker-structs-guild
-docker compose -f compose-arm64.yaml up 
-```
 
 ## Configuring
 
