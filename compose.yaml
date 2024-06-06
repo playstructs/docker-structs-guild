@@ -12,7 +12,7 @@ services:
       - 26657:26657
       - 1317:1317
     environment:
-      MONIKER: 'UnknownGuild'
+      MONIKER: "${MONIKER}"
       NETWORK_VERSION: '97b'
       NETWORK_TYPE: 'testnet'
       NETWORK_CHAIN_ID: 'structstestnet-97'
@@ -27,6 +27,14 @@ services:
     ports:
       - 5432:5432
     restart: on-failure
+    environment:
+      GUILD_ID: "${GUILD_ID}"
+      GUILD_NAME: "${GUILD_NAME}"
+      GUILD_DESCRIPTION: "{GUILD_DESCRIPTION}"
+      GUILD_TAG: "${GUILD_TAG}"
+      GUILD_LOGO: "${GUILD_LOGO}"
+      GUILD_SOCIALS: "${GUILD_SOCIALS}"
+      GUILD_WEBSITE: "${GUILD_WEBSITE}"
   structs-proxy:
     image: 'structs/structs-proxy:latest'
     hostname: 'structs-proxy'
