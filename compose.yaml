@@ -41,7 +41,23 @@ services:
     hostname: 'structs-proxy'
     restart: on-failure
     ports:
-     - 80:80  
+     - 80:80
+  structs-nats:
+    image: nats
+    hostname: 'structs-nats'
+    restart: on-failure
+    ports:
+      - 4222:4222
+      - 8222:8222
+    command: "--cluster_name GRASS --cluster nats://0.0.0.0:6222 --http_port 8222 "
+  structs-grass:
+    image: 'structs/structs-grass:latest'
+    hostname: 'structs-grass'
+    restart: on-failure
+    environment:
+      PG_CHANNEL: 'grass'
+      NAT_HOST: 'nats://structs-nats:4222'
+      PG_CONNECTION: 'postgres://structs_indexer@structs-pg:5432/structs'
 volumes:
   pgdata:
   chaindata:
