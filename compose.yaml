@@ -49,7 +49,10 @@ services:
     ports:
       - 4222:4222
       - 8222:8222
-    command: "--cluster_name GRASS --cluster nats://0.0.0.0:6222 --http_port 8222 "
+      - 1443:1443
+    command: "-c /etc/nats/nats.conf --cluster_name GRASS --cluster nats://0.0.0.0:6222 --http_port 8222 "
+    volumes:
+      - ./config/nats/:/etc/nats
   structs-grass:
     image: 'structs/structs-grass:latest'
     hostname: 'structs-grass'
