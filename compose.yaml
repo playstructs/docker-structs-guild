@@ -41,7 +41,7 @@ services:
     hostname: 'structs-proxy'
     restart: on-failure
     ports:
-     - 80:80
+     - ${PROXY_HTTP_PORT}:80
   structs-nats:
     image: nats
     hostname: 'structs-nats'
@@ -66,7 +66,7 @@ services:
     hostname: 'structs-webapp'
     restart: on-failure
     ports:
-      - 8080:80
+      - ${DIRECT_WEBAPP_HTTP_PORT}:80
     volumes:
       - type: bind
         source: "${WEBAPP_SOURCE}"
