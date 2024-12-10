@@ -61,6 +61,19 @@ services:
       PG_CHANNEL: 'grass'
       NAT_HOST: 'nats://structs-nats:4222'
       PG_CONNECTION: 'postgres://structs_indexer@structs-pg:5432/structs'
+  structs-webapp:
+    image: 'structs/structs-webapp:latest'
+    hostname: 'structs-webapp'
+    restart: on-failure
+    ports:
+      - 8080:80
+    volumes:
+      - type: bind
+        source: "${WEBAPP_SOURCE}"
+        target: /src
+    environment:
+      DATABASE_URL: 'postgres://structs_webapp@structs-pg:5432/structs?serverVersion=14'
+      NAT_URL: 'nats://structs-nats:4222'
 volumes:
   pgdata:
   chaindata:
