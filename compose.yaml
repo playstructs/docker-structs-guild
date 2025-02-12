@@ -70,7 +70,7 @@ services:
     volumes:
       - type: bind
         source: "${WEBAPP_SOURCE}"
-        target: /webapp
+        target: /src
     environment:
       DATABASE_URL: 'postgres://structs_webapp@structs-pg:5432/structs?serverVersion=17'
       NAT_URL: 'nats://structs-nats:4222'
