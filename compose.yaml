@@ -13,9 +13,9 @@ services:
       - 1317:1317
     environment:
       MONIKER: "${MONIKER}"
-      NETWORK_VERSION: '100b'
+      NETWORK_VERSION: '101b'
       NETWORK_TYPE: 'testnet'
-      NETWORK_CHAIN_ID: 'structstestnet-100'
+      NETWORK_CHAIN_ID: 'structstestnet-101'
       NODE_TYPE: 'NONVALIDATING'
       NODE_INDEXER: 'psql'
       NODE_INDEXER_PG_CONNECTION: 'postgres://structs_indexer@structs-pg:5432/structs'
@@ -28,7 +28,7 @@ services:
       - ${DIRECT_POSTGRES_PORT}:5432
     restart: on-failure
     environment:
-      NETWORK_VERSION: '100b'
+      NETWORK_VERSION: '101b'
       GUILD_ID: "${GUILD_ID}"
       GUILD_NAME: "${GUILD_NAME}"
       GUILD_DESCRIPTION: "${GUILD_DESCRIPTION}"
