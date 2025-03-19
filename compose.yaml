@@ -34,6 +34,7 @@ services:
       GUILD_DESCRIPTION: "${GUILD_DESCRIPTION}"
       GUILD_TAG: "${GUILD_TAG}"
       GUILD_LOGO: "${GUILD_LOGO}"
+      GUILD_DENOM: "${GUILD_DENOM}"
       GUILD_SOCIALS: "${GUILD_SOCIALS}"
       GUILD_WEBSITE: "${GUILD_WEBSITE}"
   structs-proxy:
