@@ -85,6 +85,12 @@ services:
       DATABASE_URL: 'postgres://structs_webapp@structs-pg:5432/structs'
       NAT_URL: 'nats://structs-nats:4222'
       AGENT_TARGET_NUMBER: 30
+  structs-crawler:
+    image: 'structs/structs-crawler:latest'
+    hostname: 'structs-crawler'
+    restart: on-failure
+    environment:
+      DATABASE_URL: 'postgres://structs_crawler@structs-pg:5432/structs'
 
 volumes:
   pgdata:
