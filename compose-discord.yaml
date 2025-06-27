@@ -97,6 +97,7 @@ services:
     restart: on-failure
     environment:
       DISCORD_TOKEN: "${DISCORD_TOKEN}"
+      DISCORD_CLIENT_ID: "${DISCORD_CLIENT_ID}"
       DATABASE_URL: 'postgres://structs_webapp@structs-pg:5432/structs'
       NAT_URL: 'nats://structs-nats:4222'
 volumes:
