@@ -1,0 +1,60 @@
+version: '3.6'
+
+x-common-env: &common-env
+  STRUCTS_MONIKER: "${MONIKER}"
+  STRUCTS_NETWORK_VERSION: "${NETWORK_VERSION}"
+  STRUCTS_CHAIN_ID: "${NETWORK_CHAIN_ID}"
+
+services:
+  structsd-network-config:
+    image: 'structs/structsd:latest'
+    volumes:
+      - chaindata:/root/.structs
+      - chainshare:/root/reactor_share
+      - chainbackup:/root/reactor_backup
+    environment:
+      <<: *common-env
+  structsd-reactor-config:
+    image: 'structs/structsd:latest'
+    volumes:
+      - chaindata:/root/.structs
+      - chainshare:/root/reactor_share
+      - chainbackup:/root/reactor_backup
+    depends_on:
+      structsd-network-config:
+        condition: service_completed_successfully
+    environment:
+      <<: *common-env
+  structsd:
+    image: 'structs/structsd:latest'
+    hostname: 'structsd'
+    volumes:
+      - chaindata:/root/.structs
+    restart: on-failure
+    depends_on:
+      structsd-network-config:
+        condition: service_completed_successfully
+      structsd-reactor-config:
+        condition: service_completed_successfully
+    ports:
+      - 26656:26656
+      - 26657:26657
+      - 1317:1317
+    environment:
+      <<: *common-env
+  structsd-reactor-create:
+    image: 'structs/structsd:latest'
+    depends_on:
+      structsd:
+        condition: service_healthy
+    volumes:
+      - chainshare:/root/reactor_share
+    environment:
+      <<: *common-env
+volumes:
+  chaindata:
+    name: structsd-chaindata
+  chainshare:
+    name: structsd-chainshare
+  chainbackup:
+    name: structsd-chainbackup
