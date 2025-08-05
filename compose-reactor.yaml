@@ -51,6 +51,7 @@ services:
       - chainshare:/root/reactor_share
     environment:
       <<: *common-env
+      STRUCTS_GUILD_MNEMONIC: "${GUILD_MNEMONIC}"
 volumes:
   chaindata:
     name: structsd-chaindata
