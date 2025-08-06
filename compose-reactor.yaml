@@ -8,6 +8,7 @@ x-common-env: &common-env
 services:
   structsd-network-config:
     image: 'structs/structsd:latest'
+    command: ["bash", "/root/scripts/network-config.sh"]
     volumes:
       - chaindata:/root/.structs
       - chainshare:/root/reactor_share
@@ -16,6 +17,7 @@ services:
       <<: *common-env
   structsd-reactor-config:
     image: 'structs/structsd:latest'
+    command: ["bash", "/root/scripts/reactor-config.sh"]
     volumes:
       - chaindata:/root/.structs
       - chainshare:/root/reactor_share
@@ -31,6 +33,12 @@ services:
     volumes:
       - chaindata:/root/.structs
     restart: on-failure
+    healthcheck:
+      test: [ "CMD-SHELL", "bash", "/root/scripts/health-check-sync-state.sh" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 48h
     depends_on:
       structsd-network-config:
         condition: service_completed_successfully
@@ -44,6 +52,7 @@ services:
       <<: *common-env
   structsd-reactor-create:
     image: 'structs/structsd:latest'
+    command: ["bash", "/root/scripts/reactor-config.sh"]
     depends_on:
       structsd:
         condition: service_healthy
