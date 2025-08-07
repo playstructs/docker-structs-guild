@@ -18,6 +18,7 @@ services:
   structsd-reactor-config:
     image: 'structs/structsd:latest'
     command: ["bash", "/root/scripts/reactor-config.sh"]
+    restart: on-failure
     volumes:
       - chaindata:/root/.structs
       - chainshare:/root/reactor_share
