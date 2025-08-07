@@ -54,6 +54,10 @@ services:
     image: 'structs/structsd:latest'
     command: ["bash", "/root/scripts/reactor-create.sh"]
     depends_on:
+      structsd-network-config:
+        condition: service_completed_successfully
+      structsd-reactor-config:
+        condition: service_completed_successfully
       structsd:
         condition: service_healthy
     volumes:
