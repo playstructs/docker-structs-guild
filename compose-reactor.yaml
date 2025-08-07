@@ -1,4 +1,4 @@
-version: '3.6'
+version: '3.9'
 
 x-common-env: &common-env
   STRUCTS_MONIKER: "${MONIKER}"
@@ -53,6 +53,7 @@ services:
   structsd-reactor-create:
     image: 'structs/structsd:latest'
     command: ["bash", "/root/scripts/reactor-create.sh"]
+    restart: on-failure
     depends_on:
       structsd-network-config:
         condition: service_completed_successfully
