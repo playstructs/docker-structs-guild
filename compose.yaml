@@ -123,6 +123,12 @@ services:
     depends_on:
       structs-pg:
         condition: service_started
+    healthcheck:
+      test: [ "CMD", "/scripts/health-check.sh" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     environment:
       PG_CHANNEL: 'grass'
       NAT_HOST: 'nats://structs-nats:4222'
