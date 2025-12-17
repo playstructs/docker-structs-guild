@@ -170,6 +170,39 @@ services:
         restart: true
     environment:
       DATABASE_URL: 'postgres://structs_crawler@structs-pg:5432/structs'
+  structs-mcp:
+    image: 'structs/structs-mcp:latest'
+    hostname: 'structs-mcp'
+    restart: unless-stopped
+    depends_on:
+      structs-pg:
+        condition: service_healthy
+        restart: true
+      structs-webapp:
+        condition: service_completed_successfully
+    environment:
+      - NODE_ENV=production
+      - CONSENSUS_RPC_URL=${CONSENSUS_RPC_URL:-http://structsd:26657}
+      - CONSENSUS_API_URL=${CONSENSUS_API_URL:-http://structsd:1317}
+      - WEBAPP_API_URL=${WEBAPP_API_URL:-http://structs-webapp:8080}
+      - NATS_URL=${NATS_URL:-nats://structs-nats:4222}
+      - NATS_WEBSOCKET_URL=${NATS_WEBSOCKET_URL:-ws://structs-nats:1443}
+      # Database (required for transaction submission and player creation)
+      - DATABASE_URL=${DATABASE_URL:-postgres://structs_webapp@structs-pg:5432/structs?serverVersion=17}
+      # Database access control:
+      # - When DANGER=true: enable database-backed transactions (write operations)
+      # - When DANGER=false (default): run in read-only mode via APIs only
+      - DANGER=${MCP_DANGER:-false}
+      # Proof-of-work configuration (see README and AGE-CALCULATION-AUTOMATIC.md)
+      - TARGET_DIFFICULTY_START=${TARGET_DIFFICULTY_START:-7}
+      # References feature (optional; defaults keep it disabled but discoverable)
+      - REFERENCES_ENABLED=${REFERENCES_ENABLED:-false}
+      - MCP_TRANSPORT=${MCP_TRANSPORT:-http}
+      - MCP_HTTP_PORT=${MCP_HTTP_PORT:-3000}
+      - MCP_HTTP_HOST=${MCP_HTTP_HOST:-0.0.0.0}
+    ports:
+      - "${MCP_HTTP_PORT:-3000}:3000"  # Expose HTTP port if using HTTP transport
+    user: "1001:1001"  # Non-root user (mcp user from Dockerfile)
 volumes:
   pgetc:
     name: structs-pg-etc
