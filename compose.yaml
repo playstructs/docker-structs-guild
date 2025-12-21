@@ -146,6 +146,9 @@ services:
     environment:
       DATABASE_URL: 'postgres://structs_webapp@structs-pg:5432/structs?serverVersion=17'
       NAT_URL: 'nats://structs-nats:4222'
+      APP_ENV: "${WEBAPP_APP_ENV}"
+      APP_DEBUG: "${WEBAPP_APP_DEBUG}"
+      APP_SECRET: "${WEBAPP_APP_SECRET}"
   structs-tsa:
     image: 'structs/structs-tsa:latest'
     hostname: 'structs-tsa'
