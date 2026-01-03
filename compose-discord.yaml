@@ -1,48 +1,110 @@
 version: '3.9'
 
+x-common-env: &common-env
+  STRUCTS_MONIKER: "${MONIKER}"
+  STRUCTS_NETWORK_VERSION: "${NETWORK_VERSION}"
+  STRUCTS_CHAIN_ID: "${NETWORK_CHAIN_ID}"
+
 services:
+  structsd-network-config:
+    image: 'structs/structsd:latest'
+    command: ["bash", "/root/scripts/network-config.sh"]
+    volumes:
+      - chaindata:/root/.structs
+      - chainshare:/root/reactor_share
+      - chainbackup:/root/reactor_backup
+    environment:
+      <<: *common-env
+  structsd-indexer-config:
+    image: 'structs/structsd:latest'
+    command: ["bash", "/root/scripts/indexer-config.sh"]
+    volumes:
+      - chaindata:/root/.structs
+    depends_on:
+      structsd-network-config:
+        condition: service_completed_successfully
+      structs-pg:
+        condition: service_healthy
+        restart: true
+    environment:
+      <<: *common-env
+      STRUCTS_INDEXER_PG_CONNECTION: 'postgres://structs_indexer@structs-pg:5432/structs'
   structsd:
     image: 'structs/structsd:latest'
     hostname: 'structsd'
     volumes:
-      - chaindata:/var/structs/chain
+      - chaindata:/root/.structs
     restart: on-failure
     ports:
       - 26656:26656
       - 26657:26657
       - 1317:1317
     environment:
-      MONIKER: "${MONIKER}"
-      NETWORK_VERSION: '102b'
-      NETWORK_TYPE: 'testnet'
-      NETWORK_CHAIN_ID: 'structstestnet-102'
-      NODE_TYPE: 'NONVALIDATING'
-      NODE_INDEXER: 'psql'
-      NODE_INDEXER_PG_CONNECTION: 'postgres://structs_indexer@structs-pg:5432/structs'
+      <<: *common-env
+    healthcheck:
+      test: [ "CMD-SHELL", "bash", "/root/scripts/health-check-sync-state.sh" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 48h
+    depends_on:
+      structsd-network-config:
+        condition: service_completed_successfully
+      structs-pg:
+        condition: service_healthy
+        restart: true
+      structsd-indexer-config:
+        condition: service_completed_successfully
+  structs-pg-init:
+    image: 'structs/structs-pg:latest'
+    hostname: 'structs-pg'
+    command: [ "bash", "/src/scripts/database-init.sh" ]
+    volumes:
+      - pgdata:/var/lib/postgresql/
+      - pgetc:/etc/postgresql/
+    environment:
+      <<: *common-env
+      SQITCH_PG_CONNECTION: "${SQITCH_PG_CONNECTION}"
   structs-pg:
     image: 'structs/structs-pg:latest'
     hostname: 'structs-pg'
     volumes:
       - pgdata:/var/lib/postgresql/
+      - pgetc:/etc/postgresql/
     ports:
       - ${DIRECT_POSTGRES_PORT}:5432
     restart: on-failure
+    depends_on:
+      structs-pg-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: pg_isready
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
     environment:
-      NETWORK_VERSION: '102b'
-      GUILD_ID: "${GUILD_ID}"
-      GUILD_NAME: "${GUILD_NAME}"
-      GUILD_DESCRIPTION: "${GUILD_DESCRIPTION}"
-      GUILD_TAG: "${GUILD_TAG}"
-      GUILD_LOGO: "${GUILD_LOGO}"
-      GUILD_DENOM: "${GUILD_DENOM}"
-      GUILD_SOCIALS: "${GUILD_SOCIALS}"
-      GUILD_WEBSITE: "${GUILD_WEBSITE}"
+      DATABSE_NAME: "${DATABASE_NAME}"
+  structs-pg-auto-migrate:
+    image: 'structs/structs-pg:latest'
+    command: [ "bash","/src/scripts/database-auto-migrate.sh" ]
+    depends_on:
+      structs-pg:
+        condition: service_healthy
+        restart: true
+      structsd:
+        condition: service_healthy
+        restart: true
+    environment:
+      <<: *common-env
+      AUTO_MIGRATE_SLEEP: "${AUTO_MIGRATE_SLEEP}"
+      SQITCH_PG_CONNECTION: "${SQITCH_PG_CONNECTION}"
   structs-proxy:
     image: 'structs/structs-proxy:latest'
     hostname: 'structs-proxy'
     restart: on-failure
     ports:
-     - ${PROXY_HTTP_PORT}:80
+      - ${PROXY_HTTP_PORT}:80
   structs-nats:
     image: nats
     hostname: 'structs-nats'
@@ -58,6 +120,9 @@ services:
     image: 'structs/structs-grass:latest'
     hostname: 'structs-grass'
     restart: on-failure
+    depends_on:
+      structs-pg:
+        condition: service_started
     healthcheck:
       test: [ "CMD", "/scripts/health-check.sh" ]
       interval: 30s
@@ -81,12 +146,19 @@ services:
     environment:
       DATABASE_URL: 'postgres://structs_webapp@structs-pg:5432/structs?serverVersion=17'
       NAT_URL: 'nats://structs-nats:4222'
+      APP_ENV: "${WEBAPP_APP_ENV}"
+      APP_DEBUG: "${WEBAPP_APP_DEBUG}"
+      APP_SECRET: "${WEBAPP_APP_SECRET}"
   structs-tsa:
     image: 'structs/structs-tsa:latest'
     hostname: 'structs-tsa'
     restart: on-failure
     volumes:
       - tsa-keyring:/var/structs/accounts
+    depends_on:
+      structs-pg:
+        condition: service_healthy
+        restart: true
     environment:
       DATABASE_URL: 'postgres://structs_webapp@structs-pg:5432/structs'
       NAT_URL: 'nats://structs-nats:4222'
@@ -95,6 +167,10 @@ services:
     image: 'structs/structs-crawler:latest'
     hostname: 'structs-crawler'
     restart: on-failure
+    depends_on:
+      structs-pg:
+        condition: service_healthy
+        restart: true
     environment:
       DATABASE_URL: 'postgres://structs_crawler@structs-pg:5432/structs'
   structs-discord:
@@ -107,6 +183,14 @@ services:
       DATABASE_URL: 'postgres://structs_webapp@structs-pg:5432/structs'
       NAT_URL: 'nats://structs-nats:4222'
 volumes:
+  pgetc:
+    name: structs-pg-etc
   pgdata:
+    name: structs-pg-data
   chaindata:
+    name: structsd-chaindata
+  chainshare:
+    name: structsd-chainshare
+  chainbackup:
+    name: structsd-chainbackup
   tsa-keyring:
