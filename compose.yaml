@@ -183,7 +183,7 @@ services:
         condition: service_healthy
         restart: true
       structs-webapp:
-        condition: service_completed_successfully
+        condition: service_started
     environment:
       - NODE_ENV=production
       - CONSENSUS_RPC_URL=${CONSENSUS_RPC_URL:-http://structsd:26657}
