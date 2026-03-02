@@ -69,6 +69,13 @@ services:
   structs-pg:
     image: 'structs/structs-pg:latest'
     hostname: 'structs-pg'
+    command: >
+      bash -c "
+        trap '/etc/init.d/postgresql stop; exit 0' SIGTERM SIGINT SIGQUIT;
+        /etc/init.d/postgresql start;
+        tail -f /var/log/postgresql/postgresql-*.log &
+        wait
+      "
     volumes:
       - pgdata:/var/lib/postgresql/
       - pgetc:/etc/postgresql/
@@ -78,6 +85,7 @@ services:
     depends_on:
       structs-pg-init:
         condition: service_completed_successfully
+    stop_grace_period: 30s
     healthcheck:
       test: pg_isready
       interval: 20s
