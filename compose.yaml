@@ -34,7 +34,7 @@ services:
     hostname: 'structsd'
     volumes:
       - chaindata:/root/.structs
-    restart: on-failure
+    restart: unless-stopped
     ports:
       - 26656:26656
       - 26657:26657
