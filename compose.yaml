@@ -196,6 +196,7 @@ services:
         target: /app
       - /app/node_modules
     environment:
+      STRUCTS_CONTROL_MODE: dev
       STRUCTS_DEV_PROXY_TARGET: "http://structs-webapp:80"
       STRUCTS_DEV_GALLERY: "${CONTROL_DEV_GALLERY:-}"
       CHOKIDAR_USEPOLLING: "${CONTROL_CHOKIDAR_POLLING:-true}"
