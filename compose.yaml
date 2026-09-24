@@ -41,7 +41,7 @@ services:
       <<: *common-env
       STRUCTSD_ARGUMENTS: "${STRUCTSD_ARGUMENTS}"
     healthcheck:
-      test: [ "CMD-SHELL", "bash", "/root/scripts/health-check-sync-state.sh" ]
+      test: ["CMD", "bash", "/root/scripts/health-check-sync-state.sh"]
       interval: 30s
       timeout: 10s
       retries: 5
