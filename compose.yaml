@@ -14,6 +14,9 @@ x-postgres-env: &postgres-env
   POSTGRES_SHUTDOWN_TIMEOUT: "115"
   PGDATABASE: "${DATABASE_NAME}"
   STRUCTS_PG_BRANCH: "${STRUCTS_PG_BRANCH:-origin}"
+  STRUCTS_PG_MIGRATION_TARGET: "${STRUCTS_PG_MIGRATION_TARGET:-table-signer-tx-20261030-authority-contract}"
+  STRUCTS_LEDGER_WRITER_CONTRACT: "${STRUCTS_LEDGER_WRITER_CONTRACT:-}"
+  STRUCTS_SIGNER_CONTRACT: "${STRUCTS_SIGNER_CONTRACT:-}"
 
 x-guild-env: &guild-env
   GUILD_ID: "${GUILD_ID}"
@@ -47,7 +50,7 @@ services:
       retries: 5
       start_period: 48h
   structs-pg-init:
-    image: 'structs/structs-pg:latest'
+    image: '${STRUCTS_PG_IMAGE:-structs/structs-pg:latest}'
     hostname: 'structs-pg'
     command: [ "bash", "/src/scripts/database-init.sh" ]
     stop_grace_period: 120s
@@ -59,7 +62,7 @@ services:
       RUN_MIGRATIONS: "1"
       SQITCH_PG_CONNECTION: "${SQITCH_PG_CONNECTION}"
   structs-pg:
-    image: 'structs/structs-pg:latest'
+    image: '${STRUCTS_PG_IMAGE:-structs/structs-pg:latest}'
     hostname: 'structs-pg'
     volumes:
       - pgdata:/var/lib/postgresql/
@@ -84,7 +87,7 @@ services:
     environment:
       <<: *postgres-env
   structs-pg-auto-migrate:
-    image: 'structs/structs-pg:latest'
+    image: '${STRUCTS_PG_IMAGE:-structs/structs-pg:latest}'
     command: [ "bash","/src/scripts/database-auto-migrate.sh" ]
     depends_on:
       structs-pg:
@@ -112,6 +115,8 @@ services:
     depends_on:
       structs-pg:
         condition: service_healthy
+    volumes:
+      - ./scripts/grass-health-check.sh:/scripts/health-check.sh:ro
     healthcheck:
       test: [ "CMD", "/scripts/health-check.sh" ]
       interval: 30s
@@ -150,7 +155,7 @@ services:
         condition: service_healthy
         restart: true
     environment:
-      DATABASE_URL: 'postgres://structs_webapp@structs-pg:5432/structs'
+      DATABASE_URL: '${TSA_DATABASE_URL:-postgres://structs_webapp@structs-pg:5432/structs}'
       NAT_URL: 'nats://structs-nats:4222'
       AGENT_TARGET_NUMBER: 30
   structs-crawler:
@@ -165,7 +170,7 @@ services:
       <<: *guild-env
       DATABASE_URL: 'postgres://structs_crawler@structs-pg:5432/structs'
   structs-sync-state:
-    image: 'structs/structs-pg:latest'
+    image: '${STRUCTS_PG_IMAGE:-structs/structs-pg:latest}'
     hostname: 'structs-sync-state'
     restart: unless-stopped
     command: [ "/src/scripts/sync_state.sh" ]
@@ -178,7 +183,7 @@ services:
       PGSSLMODE: "require"
       SYNC_STATE_DB_MAX_CONNS: "4"
       SYNC_POLL_INTERVAL: "3s"
-      SYNC_STATE_MIRROR_RAW: "false"
+      SYNC_STATE_MIRROR_RAW: "${SYNC_STATE_MIRROR_RAW:-false}"
       # Optional one-shot backfill then exit:
       # SYNC_ONE_SHOT: "true"
     # Do not scale this service — second instance will fail the writer lock.
@@ -202,9 +207,11 @@ services:
       CHOKIDAR_USEPOLLING: "${CONTROL_CHOKIDAR_POLLING:-true}"
 volumes:
   pgetc:
-    name: structs-pg-etc
+    external: ${STRUCTS_PG_EXTERNAL_VOLUMES:-false}
+    name: ${STRUCTS_PG_CONFIG_VOLUME:-structs-pg-etc}
   pgdata:
-    name: structs-pg-data
+    external: ${STRUCTS_PG_EXTERNAL_VOLUMES:-false}
+    name: ${STRUCTS_PG_DATA_VOLUME:-structs-pg-data}
   chaindata:
     name: structsd-chaindata
   chainshare:
