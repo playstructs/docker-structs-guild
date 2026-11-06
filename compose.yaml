@@ -1,5 +1,3 @@
-version: '3.9'
-
 x-common-env: &common-env
   STRUCTS_MONIKER: "${MONIKER}"
   STRUCTS_NETWORK_VERSION: "${NETWORK_VERSION}"
@@ -9,7 +7,7 @@ x-common-env: &common-env
   STRUCTS_RPC_PRIMARY: "${STRUCTS_RPC_PRIMARY}"
 
 x-postgres-env: &postgres-env
-  POSTGRES_MEMORY_MB: "8192"
+  POSTGRES_MEMORY_MB: "${POSTGRES_MEMORY_MB:-4096}"
   POSTGRES_SHUTDOWN_MODE: fast
   POSTGRES_SHUTDOWN_TIMEOUT: "115"
   PGDATABASE: "${DATABASE_NAME}"
@@ -74,7 +72,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 8G
+          memory: "${POSTGRES_MEMORY_MB:-4096}M"
     depends_on:
       structs-pg-init:
         condition: service_completed_successfully
@@ -115,15 +113,14 @@ services:
     depends_on:
       structs-pg:
         condition: service_healthy
-    volumes:
-      - ./scripts/grass-health-check.sh:/scripts/health-check.sh:ro
     healthcheck:
       test: [ "CMD", "/scripts/health-check.sh" ]
       interval: 30s
-      timeout: 10s
+      timeout: "${GRASS_HEALTHCHECK_TIMEOUT:-25s}"
       retries: 3
       start_period: 40s
     environment:
+      HEALTH_TIMEOUT: "${GRASS_HEALTH_TIMEOUT:-15}"
       PG_CHANNEL: 'grass'
       NAT_HOST: 'nats://structs-nats:4222'
       PG_CONNECTION: 'postgres://structs_indexer@structs-pg:5432/structs'
@@ -138,6 +135,8 @@ services:
       - type: bind
         source: "${WEBAPP_SOURCE}"
         target: /src
+        bind:
+          create_host_path: false
     environment:
       DATABASE_URL: 'postgres://structs_webapp@structs-pg:5432/structs?serverVersion=17'
       NAT_URL: 'nats://structs-nats:4222'
@@ -147,6 +146,7 @@ services:
   structs-tsa:
     image: 'structs/structs-tsa:latest'
     hostname: 'structs-tsa'
+    stop_grace_period: 180s
     restart: on-failure
     volumes:
       - tsa-keyring:/var/structs/accounts
@@ -155,9 +155,10 @@ services:
         condition: service_healthy
         restart: true
     environment:
-      DATABASE_URL: '${TSA_DATABASE_URL:-postgres://structs_webapp@structs-pg:5432/structs}'
+      DATABASE_URL: '${TSA_DATABASE_URL:-postgres://structs_tsa@structs-pg:5432/structs?sslmode=require}'
       NAT_URL: 'nats://structs-nats:4222'
-      AGENT_TARGET_NUMBER: 30
+      TSA_GAS_PRICE: "${TSA_GAS_PRICE:-}"
+      TSA_WORKERS: "${TSA_WORKERS:-6}"
   structs-crawler:
     image: 'structs/structs-crawler:latest'
     hostname: 'structs-crawler'
@@ -190,15 +191,18 @@ services:
   structs-control:
     image: 'structs/structs-control:latest'
     hostname: 'structs-control'
+    profiles: [control]
     restart: on-failure
     depends_on:
       - structs-webapp
     ports:
-      - "${DIRECT_CONTROL_HTTP_PORT:-8081}:8081"
+      - "${DIRECT_CONTROL_HTTP_PORT:-8081}:8092"
     volumes:
       - type: bind
-        source: "${CONTROL_SOURCE}"
+        source: "${CONTROL_SOURCE:-../structs-control}"
         target: /app
+        bind:
+          create_host_path: false
       - /app/node_modules
     environment:
       STRUCTS_CONTROL_MODE: "${STRUCTS_CONTROL_MODE:-dev}"
