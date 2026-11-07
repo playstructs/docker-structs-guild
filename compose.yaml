@@ -184,6 +184,9 @@ services:
       PGSSLMODE: "require"
       SYNC_STATE_DB_MAX_CONNS: "4"
       SYNC_POLL_INTERVAL: "3s"
+      # RPC may reach chain tip before the local node. LCD snapshots must
+      # also be available at the indexed height, including native staking.
+      STRUCTS_API_URL: "${STRUCTS_API_URL:-${STRUCTS_NODE_API_SEED:-http://structsd:1317}}"
       SYNC_STATE_MIRROR_RAW: "${SYNC_STATE_MIRROR_RAW:-false}"
       # Optional one-shot backfill then exit:
       # SYNC_ONE_SHOT: "true"

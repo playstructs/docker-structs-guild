@@ -88,6 +88,16 @@ A repeating failure at height 1,907,566 mentioning a missing transfer recipient
 requires a PG image that supports the historical empty recipient. Retrying the
 same binary or skipping the block cannot complete the ledger.
 
+Sync-state can reach chain tip through the seed RPC while the local node is
+still catching up. Its LCD queries use `STRUCTS_NODE_API_SEED` by default;
+`STRUCTS_API_URL` overrides that choice for sync-state. The selected LCD must
+serve the same chain at the indexed height. Repeated `native staking unknown`
+messages with HTTP 500 can mean the local LCD is behind: its response says
+`cannot query with height in the future`. Block ingestion can remain current
+while native staking claims are unknown. Select a caught-up LCD and recreate
+only `structs-sync-state`; pending snapshots will retry automatically. Failed
+snapshots must not be treated as zero staking balances.
+
 If `structsd` loops before startup with `could not read committed chain height`
 and an `EOF` opening `application.db`, stop the node and preserve its complete
 chain volume for diagnosis. LevelDB journal files may contain committed data.
