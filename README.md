@@ -106,6 +106,20 @@ while native staking claims are unknown. Select a caught-up LCD and recreate
 only `structs-sync-state`; pending snapshots will retry automatically. Failed
 snapshots must not be treated as zero staking balances.
 
+TSA independently prefers `TSA_RPC_URL` / `TSA_LCD_URL` (the local node by
+default). Compose supplies the public testnet pair through
+`TSA_RPC_FALLBACK_URL` / `TSA_LCD_FALLBACK_URL` while the local pair is unavailable,
+behind, or on an older protocol. Both endpoints are selected together, and TSA
+returns to local after three successful checks spaced at least ten seconds
+apart. Set both fallback variables empty to require local-only operation.
+This requires a TSA image with endpoint fallback support; older images ignore
+the fallback variables. Recreate only TSA after deploying that image/config.
+
+Healthy public fallback is reported as `healthy` with `endpoint: fallback` by
+`python -m tsa health`. Keys and signing stay in TSA. Existing readiness and
+simulation checks remain required; an uncertain broadcast is observed by its
+saved transaction hash and is never automatically resent on the other node.
+
 If `structsd` loops before startup with `could not read committed chain height`
 and an `EOF` opening `application.db`, stop the node and preserve its complete
 chain volume for diagnosis. LevelDB journal files may contain committed data.

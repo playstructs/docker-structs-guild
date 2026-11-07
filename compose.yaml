@@ -159,6 +159,10 @@ services:
       NAT_URL: 'nats://structs-nats:4222'
       TSA_GAS_PRICE: "${TSA_GAS_PRICE:-}"
       TSA_WORKERS: "${TSA_WORKERS:-6}"
+      TSA_RPC_URL: "${TSA_RPC_URL:-http://structsd:26657}"
+      TSA_LCD_URL: "${TSA_LCD_URL:-http://structsd:1317}"
+      TSA_RPC_FALLBACK_URL: "${TSA_RPC_FALLBACK_URL-https://public.testnet.structs.network:26657}"
+      TSA_LCD_FALLBACK_URL: "${TSA_LCD_FALLBACK_URL-https://public.testnet.structs.network}"
   structs-crawler:
     image: 'structs/structs-crawler:latest'
     hostname: 'structs-crawler'
