@@ -88,6 +88,14 @@ A repeating failure at height 1,907,566 mentioning a missing transfer recipient
 requires a PG image that supports the historical empty recipient. Retrying the
 same binary or skipping the block cannot complete the ledger.
 
+Catch-up defaults to `SYNC_PARALLELISM=8` concurrent block fetches and
+`SYNC_STATE_BULK_WINDOW=500` blocks per transaction. Set these in `.env` and run
+`docker compose up -d --no-deps structs-sync-state` to apply them and resume
+from the committed height. If fetching limits progress, try concurrency 16
+before 32 while keeping the window fixed. Each block fetch uses two RPC calls.
+Compare committed height per elapsed second and workload per block; a faster
+fetch or batch-application log line alone does not establish faster ingestion.
+
 Sync-state can reach chain tip through the seed RPC while the local node is
 still catching up. Its LCD queries use `STRUCTS_NODE_API_SEED` by default;
 `STRUCTS_API_URL` overrides that choice for sync-state. The selected LCD must
